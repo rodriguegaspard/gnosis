@@ -12,7 +12,6 @@ use ratatui::{
 
 use crate::app::agenda::Agenda;
 
-
 #[derive(Debug, Default)]
 pub struct App {
     /// Is the application running?
@@ -42,7 +41,7 @@ impl App {
     /// - <https://github.com/ratatui/ratatui/tree/master/examples>
     fn draw(&mut self, frame: &mut Frame) {
         frame.render_widget(
-            Agenda::load(Vec::new()),
+            Agenda::load(Vec::new(), "/home/rosco/.local/share/gnosis/agenda/agenda.md"),
             frame.area()
         );
     }

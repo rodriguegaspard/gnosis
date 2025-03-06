@@ -58,9 +58,8 @@ impl Widget for Agenda {
 }
 
 impl Agenda {
-    pub fn load(activities: Vec<Activity>) -> Self{
-        // Fetches the file where the events are and initialize with the results. If no file is
-        // found, create a new calendar
+    pub fn load(activities: Vec<Activity>, filepath: &str) -> Self{
+        let file = init::ensure_file_exists(filepath);
         Agenda{
             _activities: activities,
         }
