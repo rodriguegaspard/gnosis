@@ -1,7 +1,7 @@
 // Make a custom widget, list calendar, per week/month/ add event, specify date, duration, allow
 // for multi-date events.
 // Inspiration from lazyorg (https://github.com/HubertBel/lazyorg)
-
+use chrono::{DateTime, Local};
 use color_eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use ratatui::{
@@ -11,11 +11,33 @@ use ratatui::{
     widgets::{Block, List, ListItem, Paragraph, Widget},
     DefaultTerminal, Frame,
 };
+use crate::utils::{parser, init};
+
+pub enum Priority {
+    Low,
+    Normal,
+    Important,
+}
 
 pub struct Activity{
     _title: String,
+    _start: DateTime<Local>,
+    _end: Option<DateTime<Local>>,
+    _description: String,
+    _priority: Priority,
 }
 
+impl Activity{
+    pub fn new (&self, title: String, start: DateTime<Local>, end:Option<DateTime<Local>>, description: String, priority: Priority) -> Self {
+        Activity{
+            _title: title,
+            _start: start,
+            _end: end,
+            _description: description,
+            _priority: priority,
+        }
+    }
+}
 
 pub struct Agenda{
     _activities: Vec<Activity>,
