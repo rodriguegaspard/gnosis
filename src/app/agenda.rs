@@ -45,23 +45,47 @@ impl fmt::Display for Priority {
 pub struct Activity{
     _title: String,
     _start: DateTime<Local>,
-    _end: Option<DateTime<Local>>,
+    _end: DateTime<Local>,
     _description: String,
     _priority: Priority,
+    _weeks: (i64, i64),
 }
 
 impl Activity{
-    pub fn new (&self, title: String, start: DateTime<Local>, end:Option<DateTime<Local>>, description: String, priority: Priority) -> Self {
+    pub fn new(title: String, start: DateTime<Local>, end:DateTime<Local>, description: String, priority: Priority, weeks: (i64, i64)) -> Self {
         Activity{
             _title: title,
             _start: start,
             _end: end,
             _description: description,
             _priority: priority,
+            _weeks: weeks,
         }
     }
+
+    pub fn title(&self) -> String{
+        self._title.clone()
+    }
+
+    pub fn start(&self) -> DateTime<Local>{
+        self._start
+    }
+
+    pub fn end(&self) -> DateTime<Local>{
+        self._end
+    }
+
+    pub fn description(&self) -> String {
+        self._description.clone()
+    }
+
+    pub fn priority(&self) -> Priority{
+        self._priority
+    }
+
 }
 
+#[derive(Debug)]
 pub struct Agenda{
     _activities: Vec<Activity>,
 }
