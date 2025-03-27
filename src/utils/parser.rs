@@ -28,11 +28,16 @@ impl Parser<Activity> for AgendaParser {
         for line in content.lines(){
             match re.captures(line){
                 Some(caps) => {
-                    let start = Local.timestamp_opt(caps["start"].parse::<i64>().unwrap() ,0).unwrap();
-                    let end = Local.timestamp_opt(caps["end"].parse::<i64>().unwrap() ,0).unwrap();
-                    let priority: Priority = caps["priority"].parse().unwrap();  
-                    let activity = Activity::new(caps["title"].to_string(), start, end, caps["description"].to_string(), priority, AgendaParser::weeks(start, end));
-                    result.push(activity);
+                    if caps["start"] > caps["end"] {
+                        return Err(Error::new(ErrorKind::InvalidData, "Error while parsing the agenda : end timestamp is before start timestamp."));
+                    }
+                    else {
+                        let start = Local.timestamp_opt(caps["start"].parse::<i64>().unwrap() ,0).unwrap();
+                        let end = Local.timestamp_opt(caps["end"].parse::<i64>().unwrap() ,0).unwrap();
+                        let priority: Priority = caps["priority"].parse().unwrap();  
+                        let activity = Activity::new(caps["title"].to_string(), start, end, caps["description"].to_string(), priority, AgendaParser::weeks(start, end));
+                        result.push(activity);
+                    }
                 },
                 None => continue,
             }
