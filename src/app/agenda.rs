@@ -2,23 +2,46 @@
 // for multi-date events.
 // Inspiration from lazyorg (https://github.com/HubertBel/lazyorg)
 use chrono::{DateTime, Local};
-use color_eyre::Result;
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
+use color_eyre::{owo_colors::OwoColorize, Result};
+use std::str::FromStr;
+use std::fmt;
 use ratatui::{
     layout::{Constraint, Layout, Rect},
-    style::Stylize,
-    text::Line,
     widgets::{Block, List, ListItem, Paragraph, Widget},
-    DefaultTerminal, Frame,
+    prelude::Stylize,
 };
-use crate::utils::{parser, init};
+use crate::utils::parser::{Parser, AgendaParser};
 
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Priority {
     Low,
     Normal,
     Important,
 }
 
+impl FromStr for Priority {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "Low" => Ok(Priority::Low),
+            "Normal" => Ok(Priority::Normal),
+            "Important" => Ok(Priority::Important),
+            _ => Err(format!("'{}' is not a valid priority", s)),
+        }
+    }
+}
+
+impl fmt::Display for Priority {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Priority::Low => write!(f, "Low"),
+            Priority::Normal => write!(f, "Normal"),
+            Priority::Important => write!(f, "Important"),
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct Activity{
     _title: String,
     _start: DateTime<Local>,
