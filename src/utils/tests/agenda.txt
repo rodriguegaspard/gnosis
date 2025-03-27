@@ -1,0 +1,4 @@
+testevent1;1577808000;1578585600;this event has a description;Low
+badevent1;100000000;;"this does not work";Low
+testevent2;1577808000;1578585600;;Low
+badevent2;100000000;20000000;"this does not work";

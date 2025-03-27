@@ -26,12 +26,16 @@ impl Parser<Activity> for AgendaParser {
         let re = Regex::new(r"(?<title>.+);(?<start>[0-9]+);(?<end>[0-9]+);(?<description>.*);(?<priority>.+)").unwrap();
         let mut result = Vec::new();
         for line in content.lines(){
-            let Some(caps) = re.captures(line) else { return Err(Error::new(ErrorKind::Other, "Failed to parse the agenda"));};
-            let start = Local.timestamp_opt(caps["start"].parse::<i64>().unwrap() ,0).unwrap();
-            let end = Local.timestamp_opt(caps["end"].parse::<i64>().unwrap() ,0).unwrap();
-            let priority: Priority = caps["priority"].parse().unwrap();  
-            let activity = Activity::new(caps["title"].to_string(), start, end, caps["description"].to_string(), priority, AgendaParser::weeks(start, end));
-            result.push(activity);
+            match re.captures(line){
+                Some(caps) => {
+                    let start = Local.timestamp_opt(caps["start"].parse::<i64>().unwrap() ,0).unwrap();
+                    let end = Local.timestamp_opt(caps["end"].parse::<i64>().unwrap() ,0).unwrap();
+                    let priority: Priority = caps["priority"].parse().unwrap();  
+                    let activity = Activity::new(caps["title"].to_string(), start, end, caps["description"].to_string(), priority, AgendaParser::weeks(start, end));
+                    result.push(activity);
+                },
+                None => continue,
+            }
         }
         Ok(result)
     }
@@ -58,5 +62,39 @@ mod tests {
         let dt2 = now + Duration::days(14);
         let result = AgendaParser::weeks(dt1, dt2);
         assert_eq!((-2, 2), result);
+    }
+
+    #[test]
+    fn parse_agenda(){
+        let activities: Vec<Activity> = AgendaParser::parse("src/utils/tests/agenda.txt").expect("Failed to open the test agenda");
+        assert_eq!(2, activities.len());
+        assert_eq!((
+                "testevent1".to_string(), 
+                Local.timestamp_opt("1577808000".parse::<i64>().unwrap(), 0).unwrap(),
+                Local.timestamp_opt("1578585600".parse::<i64>().unwrap(), 0).unwrap(),
+                "this event has a description".to_string(),
+                Priority::Low,
+        ),
+        (
+            activities[0].title(),
+            activities[0].start(),
+            activities[0].end(),
+            activities[0].description(),
+            activities[0].priority()
+        ));
+        assert_eq!((
+                "testevent2".to_string(), 
+                Local.timestamp_opt("1577808000".parse::<i64>().unwrap(), 0).unwrap(),
+                Local.timestamp_opt("1578585600".parse::<i64>().unwrap(), 0).unwrap(),
+                "".to_string(),
+                Priority::Low,
+        ),
+        (
+            activities[1].title(),
+            activities[1].start(),
+            activities[1].end(),
+            activities[1].description(),
+            activities[1].priority()
+        ));
     }
 }
