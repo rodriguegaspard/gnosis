@@ -95,42 +95,34 @@ impl Widget for Agenda {
     where
         Self: Sized {
             let layout = Layout::horizontal([Constraint::Max(100); 7]).split(area);
-            Block::bordered()
-                .gray()
-                .title("MONDAY".bold().into_centered_line())
-                .render(layout[0], buf);
-            Block::bordered()
-                .gray()
-                .title("TUESDAY".bold().into_centered_line())
-                .render(layout[1], buf);
-            Block::bordered()
-                .gray()
-                .title("WEDNESDAY".bold().into_centered_line())
-                .render(layout[2], buf);
-            Block::bordered()
-                .gray()
-                .title("THURSDAY".bold().into_centered_line())
-                .render(layout[3], buf);
-            Block::bordered()
-                .gray()
-                .title("FRIDAY".bold().into_centered_line())
-                .render(layout[4], buf);
-            Block::bordered()
-                .gray()
-                .title("SATURDAY".bold().into_centered_line())
-                .render(layout[5], buf);
-            Block::bordered()
-                .gray()
-                .title("SUNDAY".bold().into_centered_line())
-                .render(layout[6], buf);
+            self.week(layout.to_vec(), buf, vec![]);
     }
 }
 
-impl Agenda {
-    pub fn load(activities: Vec<Activity>, filepath: &str) -> Self{
-        let file = init::ensure_file_exists(filepath);
+impl Agenda{
+    pub fn day(&self, area: Rect, buf: &mut ratatui::prelude::Buffer, day: String, activities: Vec<Activity>){
+        Block::bordered()
+            .gray()
+            .title(day).bold()
+            .render(area, buf);
+    }
+
+    pub fn week(&self, area: Vec<Rect>, buf: &mut ratatui::prelude::Buffer, activities: Vec<Activity>){
+        self.day(area[0], buf, String::from("MONDAY"), vec![]);
+        self.day(area[1], buf, String::from("MONDAY"), vec![]);
+        self.day(area[2], buf, String::from("MONDAY"), vec![]);
+        self.day(area[3], buf, String::from("MONDAY"), vec![]);
+        self.day(area[4], buf, String::from("MONDAY"), vec![]);
+        self.day(area[5], buf, String::from("MONDAY"), vec![]);
+        self.day(area[6], buf, String::from("MONDAY"), vec![]);
+
+    }
+}
+
+impl Default for Agenda {
+    fn default() -> Self {
         Agenda{
-            _activities: activities,
+            _activities: AgendaParser::parse("/home/rosco/.local/share/gnosis/agenda/agenda.txt").expect("Failed to load the agenda"),
         }
     }
 }
