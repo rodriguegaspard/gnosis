@@ -74,11 +74,11 @@ mod tests {
         let activities: Vec<Activity> = AgendaParser::parse("src/utils/tests/agenda.txt").expect("Failed to open the test agenda");
         assert_eq!(2, activities.len());
         assert_eq!((
-                "testevent1".to_string(), 
-                Local.timestamp_opt("1577808000".parse::<i64>().unwrap(), 0).unwrap(),
-                Local.timestamp_opt("1578585600".parse::<i64>().unwrap(), 0).unwrap(),
-                "this event has a description".to_string(),
-                Priority::Low,
+                &"testevent1".to_string(),
+                &Local.timestamp_opt("1577808000".parse::<i64>().unwrap(), 0).unwrap(),
+                &Local.timestamp_opt("1578585600".parse::<i64>().unwrap(), 0).unwrap(),
+                &"this event has a description".to_string(),
+                &Priority::Low,
         ),
         (
             activities[0].title(),
@@ -88,11 +88,11 @@ mod tests {
             activities[0].priority()
         ));
         assert_eq!((
-                "testevent2".to_string(), 
-                Local.timestamp_opt("1577808000".parse::<i64>().unwrap(), 0).unwrap(),
-                Local.timestamp_opt("1578585600".parse::<i64>().unwrap(), 0).unwrap(),
-                "".to_string(),
-                Priority::Low,
+                &"testevent2".to_string(),
+                &Local.timestamp_opt("1577808000".parse::<i64>().unwrap(), 0).unwrap(),
+                &Local.timestamp_opt("1578585600".parse::<i64>().unwrap(), 0).unwrap(),
+                &"".to_string(),
+                &Priority::Low,
         ),
         (
             activities[1].title(),

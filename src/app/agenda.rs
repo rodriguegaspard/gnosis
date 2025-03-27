@@ -63,26 +63,25 @@ impl Activity{
         }
     }
 
-    pub fn title(&self) -> String{
-        self._title.clone()
+    pub fn title(&self) -> &String{
+        &self._title
     }
 
-    pub fn start(&self) -> DateTime<Local>{
-        self._start
+    pub fn start(&self) -> &DateTime<Local>{
+        &self._start
     }
 
-    pub fn end(&self) -> DateTime<Local>{
-        self._end
+    pub fn end(&self) -> &DateTime<Local>{
+        &self._end
     }
 
-    pub fn description(&self) -> String {
-        self._description.clone()
+    pub fn description(&self) -> &String {
+        &self._description
     }
 
-    pub fn priority(&self) -> Priority{
-        self._priority
+    pub fn priority(&self) -> &Priority{
+        &self._priority
     }
-
 }
 
 #[derive(Debug)]
