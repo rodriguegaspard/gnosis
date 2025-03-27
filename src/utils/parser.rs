@@ -1,8 +1,9 @@
-// Utilities to parse .md files and returns them in useful objects.
-use std::fs::File;
-use std::io::{self, BufRead};
-use std::path::Path;
-use crate::app::agenda::{Activity, Agenda};
+// Utilities to parse text files and returns them in useful objects.
+use chrono::{DateTime, Local, TimeZone};
+use std::io::{self, BufRead, Error, ErrorKind};
+use crate::app::agenda::{Activity, Priority};
+use crate::utils::init;
+use regex::{Regex, RegexSet};
 
 pub trait Parser<T> {
     fn parse(filepath: &str) -> Result<Vec<T>, io::Error>;
@@ -10,21 +11,19 @@ pub trait Parser<T> {
 
 pub struct AgendaParser;
 
-// Agenda file structure:
-// title: string
-// start: date with timezone
-// end: date with timezone (optional)
-// description: string (optional)
-// priority: has to match Priority enum
 impl Parser<Activity> for AgendaParser {
     fn parse(filepath: &str) -> Result<Vec<Activity>, io::Error> {
-        let content = Vec::new();
-        let path = Path::new(filepath);
-        let file = File::open(&path)?;
-        let reader = io::BufReader::new(file);
-        for line in reader.lines(){
-            println!("{}", line?);
+        let content = init::read_file(filepath)?;
+        let re = Regex::new(r"(?<title>.+);(?<start>[0-9]+);(?<end>[0-9]+);(?<description>.*);(?<priority>.+)").unwrap();
+        let mut result = Vec::new();
+        for line in content.lines(){
+            let Some(caps) = re.captures(line) else { return Err(Error::new(ErrorKind::Other, "Failed to parse the agenda"));};
+            let start = Local.timestamp_opt(caps["start"].parse::<i64>().unwrap() ,0).unwrap();
+            let end = Local.timestamp_opt(caps["end"].parse::<i64>().unwrap() ,0).unwrap();
+            let priority: Priority = caps["priority"].parse().unwrap();  
+            let activity = Activity::new(caps["title"].to_string(), start, end, caps["description"].to_string(), priority);
+            result.push(activity);
         }
-        Ok(content)
+        Ok(result)
     }
 }
