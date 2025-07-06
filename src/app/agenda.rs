@@ -1,12 +1,12 @@
 // Make a custom widget, list calendar, per week/month/ add event, specify date, duration, allow
 // for multi-date events.
 // Inspiration from lazyorg (https://github.com/HubertBel/lazyorg)
-use chrono::{DateTime, Local};
+use chrono::{DateTime, Datelike, Duration, Local, Weekday};
 use color_eyre::{owo_colors::OwoColorize, Result};
 use std::str::FromStr;
 use std::fmt;
 use ratatui::{
-    layout::{Constraint, Layout, Rect},
+    layout::{Constraint, Layout, Rect, Alignment},
     widgets::{Block, List, ListItem, Paragraph, Widget},
     prelude::Stylize,
 };
@@ -41,7 +41,8 @@ impl fmt::Display for Priority {
     }
 }
 
-#[derive(Debug)]
+//Add id for deletion
+#[derive(Debug, Clone)]
 pub struct Activity{
     _title: String,
     _start: DateTime<Local>,
@@ -94,27 +95,42 @@ impl Widget for Agenda {
     where
         Self: Sized {
             let layout = Layout::horizontal([Constraint::Max(100); 7]).split(area);
-            self.week(layout.to_vec(), buf, vec![]);
+            self.render_week(layout.to_vec(), buf, self.get_week_activities(Local::now()));
     }
 }
 
 impl Agenda{
-    pub fn day(&self, area: Rect, buf: &mut ratatui::prelude::Buffer, day: String, activities: Vec<Activity>){
-        Block::bordered()
-            .gray()
-            .title(day).bold()
-            .render(area, buf);
+    pub fn activities(&self) -> &Vec<Activity> {
+        &self._activities
     }
 
-    pub fn week(&self, area: Vec<Rect>, buf: &mut ratatui::prelude::Buffer, activities: Vec<Activity>){
-        self.day(area[0], buf, String::from("MONDAY"), vec![]);
-        self.day(area[1], buf, String::from("MONDAY"), vec![]);
-        self.day(area[2], buf, String::from("MONDAY"), vec![]);
-        self.day(area[3], buf, String::from("MONDAY"), vec![]);
-        self.day(area[4], buf, String::from("MONDAY"), vec![]);
-        self.day(area[5], buf, String::from("MONDAY"), vec![]);
-        self.day(area[6], buf, String::from("MONDAY"), vec![]);
+    pub fn get_week_activities(&self, day: DateTime<Local>) -> Vec<&Activity> {
+        let days_from_monday = day.weekday().num_days_from_monday() as i64;
+        let week_start = day.date_naive() - Duration::days(days_from_monday);
+        let week_end = week_start + Duration::days(6);
+        self._activities
+            .iter()
+            .filter(|a| {
+                let activity_start = a.start().date_naive();
+                let activity_end = a.end().date_naive();
+                activity_end >= week_start && activity_start <= week_end
+            })
+        .collect()
+    }
 
+    pub fn render_week(&self, area: Vec<Rect>, buf: &mut ratatui::prelude::Buffer, activities: Vec<&Activity>){
+        let day_names = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"];
+        // Extract activities per day and create renderable objects accordingly 
+        for day in 0..7{
+            Paragraph::new("testing")
+                .alignment(Alignment::Center)
+                .block(
+                    Block::bordered()
+                    .gray()
+                    .title(day_names[day]).bold(),
+                )
+                .render(area[day], buf)
+            }
     }
 }
 
