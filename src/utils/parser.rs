@@ -71,7 +71,7 @@ mod tests {
 
     #[test]
     fn parse_agenda(){
-        let activities: Vec<Activity> = AgendaParser::parse("src/utils/tests/agenda.txt").expect("Failed to open the test agenda");
+        let activities: Vec<Activity> = AgendaParser::parse("tests/parser_test.txt").expect("Failed to open the test agenda");
         assert_eq!(2, activities.len());
         assert_eq!((
                 &"testevent1".to_string(),
