@@ -102,27 +102,11 @@ impl Agenda{
         }
     }
 
-    // pub fn get_week_activities(&self, day: DateTime<Local>) -> Vec<&Activity> {
-    //     let days_from_monday = day.weekday().num_days_from_monday() as i64;
-    //     let week_start = day.date_naive() - Duration::days(days_from_monday);
-    //     let week_end = week_start + Duration::days(6);
-    //     self._activities
-    //         .iter()
-    //         .filter(|a| {
-    //             let activity_start = a.start().date_naive();
-    //             let activity_end = a.end().date_naive();
-    //             activity_end >= week_start && activity_start <= week_end
-    //         })
-    //     .collect()
-    // }
-    //
-
     pub fn get_week_activities(&self, day: DateTime<Local>) -> BTreeMap<NaiveDate, Vec<&Activity>> {
         let days_from_monday = day.weekday().num_days_from_monday() as i64;
         let week_start = day.date_naive() - Duration::days(days_from_monday);
         let week_end = week_start + Duration::days(6);
 
-        // Initialize map with all 7 days to ensure consistent week structure
         let mut week_map: BTreeMap<NaiveDate, Vec<&Activity>> = (0..7)
             .map(|i| (week_start + Duration::days(i), Vec::new()))
             .collect();
@@ -131,16 +115,13 @@ impl Agenda{
             let activity_start = activity.start().date_naive();
             let activity_end = activity.end().date_naive();
 
-            // Skip activities outside the week
             if activity_end < week_start || activity_start > week_end {
                 continue;
             }
 
-            // Determine overlap range
             let start = activity_start.max(week_start);
             let end = activity_end.min(week_end);
 
-            // Insert into each overlapping day
             for offset in 0..=(end - start).num_days() {
                 let day = start + Duration::days(offset);
                 week_map.entry(day).or_default().push(activity);
