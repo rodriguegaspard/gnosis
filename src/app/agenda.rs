@@ -1,7 +1,8 @@
 // Make a custom widget, list calendar, per week/month/ add event, specify date, duration, allow
 // for multi-date events.
 // Inspiration from lazyorg (https://github.com/HubertBel/lazyorg)
-use chrono::{DateTime, Datelike, Duration, Local, Weekday};
+use std::{collections::BTreeMap, ffi};
+use chrono::{DateTime, Datelike, Duration, Local, NaiveDate, TimeZone};
 use color_eyre::{owo_colors::OwoColorize, Result};
 use std::str::FromStr;
 use std::fmt;
@@ -90,47 +91,63 @@ pub struct Agenda{
     _activities: Vec<Activity>,
 }
 
-impl Widget for Agenda {
-    fn render(self, area: Rect, buf: &mut ratatui::prelude::Buffer)
-    where
-        Self: Sized {
-            let layout = Layout::horizontal([Constraint::Max(100); 7]).split(area);
-            self.render_week(layout.to_vec(), buf, self.get_week_activities(Local::now()));
-    }
-}
-
 impl Agenda{
     pub fn activities(&self) -> &Vec<Activity> {
         &self._activities
     }
 
-    pub fn get_week_activities(&self, day: DateTime<Local>) -> Vec<&Activity> {
+    fn from_file(filepath: &str) -> Self {
+        Agenda{
+            _activities: AgendaParser::parse(filepath).expect("Failed to load the agenda"),
+        }
+    }
+
+    // pub fn get_week_activities(&self, day: DateTime<Local>) -> Vec<&Activity> {
+    //     let days_from_monday = day.weekday().num_days_from_monday() as i64;
+    //     let week_start = day.date_naive() - Duration::days(days_from_monday);
+    //     let week_end = week_start + Duration::days(6);
+    //     self._activities
+    //         .iter()
+    //         .filter(|a| {
+    //             let activity_start = a.start().date_naive();
+    //             let activity_end = a.end().date_naive();
+    //             activity_end >= week_start && activity_start <= week_end
+    //         })
+    //     .collect()
+    // }
+    //
+
+    pub fn get_week_activities(&self, day: DateTime<Local>) -> BTreeMap<NaiveDate, Vec<&Activity>> {
         let days_from_monday = day.weekday().num_days_from_monday() as i64;
         let week_start = day.date_naive() - Duration::days(days_from_monday);
         let week_end = week_start + Duration::days(6);
-        self._activities
-            .iter()
-            .filter(|a| {
-                let activity_start = a.start().date_naive();
-                let activity_end = a.end().date_naive();
-                activity_end >= week_start && activity_start <= week_end
-            })
-        .collect()
-    }
 
-    pub fn render_week(&self, area: Vec<Rect>, buf: &mut ratatui::prelude::Buffer, activities: Vec<&Activity>){
-        let day_names = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"];
-        // Extract activities per day and create renderable objects accordingly 
-        for day in 0..7{
-            Paragraph::new("testing")
-                .alignment(Alignment::Center)
-                .block(
-                    Block::bordered()
-                    .gray()
-                    .title(day_names[day]).bold(),
-                )
-                .render(area[day], buf)
+        // Initialize map with all 7 days to ensure consistent week structure
+        let mut week_map: BTreeMap<NaiveDate, Vec<&Activity>> = (0..7)
+            .map(|i| (week_start + Duration::days(i), Vec::new()))
+            .collect();
+
+        for activity in &self._activities {
+            let activity_start = activity.start().date_naive();
+            let activity_end = activity.end().date_naive();
+
+            // Skip activities outside the week
+            if activity_end < week_start || activity_start > week_end {
+                continue;
             }
+
+            // Determine overlap range
+            let start = activity_start.max(week_start);
+            let end = activity_end.min(week_end);
+
+            // Insert into each overlapping day
+            for offset in 0..=(end - start).num_days() {
+                let day = start + Duration::days(offset);
+                week_map.entry(day).or_default().push(activity);
+            }
+        }
+        eprintln!("{:#?}", week_map);
+        week_map
     }
 }
 
@@ -140,4 +157,11 @@ impl Default for Agenda {
             _activities: AgendaParser::parse("/home/rosco/.local/share/gnosis/agenda/agenda.txt").expect("Failed to load the agenda"),
         }
     }
+}
+
+#[test]
+fn get_week_events() {
+    let agenda = Agenda::from_file("tests/agenda_test.txt");
+    let monday : chrono::DateTime<Local> = Local.with_ymd_and_hms(2025, 1, 13, 0, 0, 0).unwrap();
+    let week_activities : BTreeMap<NaiveDate, Vec<&Activity>> = agenda.get_week_activities(monday);
 }
