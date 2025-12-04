@@ -171,14 +171,22 @@ fn check_event_in_week() {
     assert_eq!(tuesday_activities[2].title(), "Span1"); 
 }
 
-//
-// fn check_spanning_event() {
-//     let agenda = Agenda::from_file("tests/agenda_test.txt");
-//     let monday : chrono::DateTime<Local> = Local.with_ymd_and_hms(2025, 1, 13, 0, 0, 0).unwrap();
-//     let week_activities : BTreeMap<NaiveDate, Vec<&Activity>> = agenda.get_week_activities(monday);
-//
-// }
-//
+#[test]
+fn check_spanning_event() {
+    let agenda = Agenda::from_file("tests/agenda_test.txt");
+    let target_week : chrono::DateTime<Local> = Local.with_ymd_and_hms(2025, 1, 13, 0, 0, 0).unwrap();
+    let week_activities : BTreeMap<NaiveDate, Vec<&Activity>> = agenda.get_week_activities(target_week);
+
+    // Span1 should have 7 entries, one for each day of the week
+    for (date, activities) in &week_activities {
+    let contains_span1 = activities
+        .iter()
+        .any(|a| a.title() == "Span1");
+
+    assert!(contains_span1, "Date {} does not contain an activity named Span1.", date);
+    }
+}
+
 // fn check_multiweek_event() {
 //     let agenda = Agenda::from_file("tests/agenda_test.txt");
 //     let monday : chrono::DateTime<Local> = Local.with_ymd_and_hms(2025, 1, 13, 0, 0, 0).unwrap();
