@@ -141,7 +141,7 @@ impl Default for Agenda {
 }
 
 #[test]
-fn parse_correct_week() {
+fn get_correct_week() {
     let agenda = Agenda::from_file("tests/agenda_test.txt");
     let target_week : chrono::DateTime<Local> = Local.with_ymd_and_hms(2025, 1, 15, 0, 0, 0).unwrap(); // Random day of the week
     let week_activities : BTreeMap<NaiveDate, Vec<&Activity>> = agenda.get_week_activities(target_week);
@@ -156,12 +156,21 @@ fn parse_correct_week() {
     assert_eq!(last_key, sunday);
 }
 
-// fn check_event_in_week() {
-//     let agenda = Agenda::from_file("tests/agenda_test.txt");
-//     let monday : chrono::DateTime<Local> = Local.with_ymd_and_hms(2025, 1, 13, 0, 0, 0).unwrap();
-//     let week_activities : BTreeMap<NaiveDate, Vec<&Activity>> = agenda.get_week_activities(monday);
-//
-// }
+#[test]
+fn check_event_in_week() {
+    let agenda = Agenda::from_file("tests/agenda_test.txt");
+    let target_week : chrono::DateTime<Local> = Local.with_ymd_and_hms(2025, 1, 13, 0, 0, 0).unwrap();
+    let week_activities : BTreeMap<NaiveDate, Vec<&Activity>> = agenda.get_week_activities(target_week);
+
+    // We should have 3 activities on tuesday : Meet, Call and Span1, in that order in the .csv
+    let tuesday = NaiveDate::from_ymd_opt(2025, 1, 14).unwrap();
+    let tuesday_activities = week_activities.get(&tuesday).unwrap();
+    assert_eq!(tuesday_activities.len(), 3);
+    assert_eq!(tuesday_activities[0].title(), "Meet"); 
+    assert_eq!(tuesday_activities[1].title(), "Call"); 
+    assert_eq!(tuesday_activities[2].title(), "Span1"); 
+}
+
 //
 // fn check_spanning_event() {
 //     let agenda = Agenda::from_file("tests/agenda_test.txt");
