@@ -141,8 +141,38 @@ impl Default for Agenda {
 }
 
 #[test]
-fn get_week_events() {
+fn parse_correct_week() {
     let agenda = Agenda::from_file("tests/agenda_test.txt");
-    let monday : chrono::DateTime<Local> = Local.with_ymd_and_hms(2025, 1, 13, 0, 0, 0).unwrap();
-    let week_activities : BTreeMap<NaiveDate, Vec<&Activity>> = agenda.get_week_activities(monday);
+    let target_week : chrono::DateTime<Local> = Local.with_ymd_and_hms(2025, 1, 15, 0, 0, 0).unwrap(); // Random day of the week
+    let week_activities : BTreeMap<NaiveDate, Vec<&Activity>> = agenda.get_week_activities(target_week);
+
+    let monday = NaiveDate::from_ymd_opt(2025, 1, 13).unwrap();
+    let sunday = NaiveDate::from_ymd_opt(2025, 1, 19).unwrap();
+
+    let first_key = *week_activities.keys().next().unwrap();
+    assert_eq!(first_key, monday);
+
+    let last_key = *week_activities.keys().next_back().unwrap();
+    assert_eq!(last_key, sunday);
 }
+
+// fn check_event_in_week() {
+//     let agenda = Agenda::from_file("tests/agenda_test.txt");
+//     let monday : chrono::DateTime<Local> = Local.with_ymd_and_hms(2025, 1, 13, 0, 0, 0).unwrap();
+//     let week_activities : BTreeMap<NaiveDate, Vec<&Activity>> = agenda.get_week_activities(monday);
+//
+// }
+//
+// fn check_spanning_event() {
+//     let agenda = Agenda::from_file("tests/agenda_test.txt");
+//     let monday : chrono::DateTime<Local> = Local.with_ymd_and_hms(2025, 1, 13, 0, 0, 0).unwrap();
+//     let week_activities : BTreeMap<NaiveDate, Vec<&Activity>> = agenda.get_week_activities(monday);
+//
+// }
+//
+// fn check_multiweek_event() {
+//     let agenda = Agenda::from_file("tests/agenda_test.txt");
+//     let monday : chrono::DateTime<Local> = Local.with_ymd_and_hms(2025, 1, 13, 0, 0, 0).unwrap();
+//     let week_activities : BTreeMap<NaiveDate, Vec<&Activity>> = agenda.get_week_activities(monday);
+//
+// }
