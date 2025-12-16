@@ -3,7 +3,8 @@ use chrono::{DateTime, Datelike, Local, TimeZone};
 use std::io::{self, BufRead, Error, ErrorKind};
 use crate::app::agenda::{Activity, Priority};
 use crate::utils::init;
-use regex::{Regex, RegexSet};
+use regex::{Regex};
+use chrono::{Duration};
 
 pub trait Parser<T> {
     fn parse(filepath: &str) -> Result<Vec<T>, io::Error>;
@@ -12,11 +13,19 @@ pub trait Parser<T> {
 pub struct AgendaParser;
 
 impl AgendaParser{
-    fn weeks(start: DateTime<Local>, end: DateTime<Local>) -> (i64, i64){
-        let current: i64 = Local::now().iso_week().week().into();
-        let start_week: i64 = start.iso_week().week().into();
-        let end_week: i64 = end.iso_week().week().into();
-        (start_week - current, end_week - current)
+    fn weeks(start: DateTime<Local>, end: DateTime<Local>) -> (i64, i64) {
+        let now = Local::now();
+
+        fn week_index(dt: DateTime<Local>) -> i64 {
+            let monday = dt - Duration::days(dt.weekday().num_days_from_monday() as i64);
+            (monday.date_naive().num_days_from_ce() / 7).into()
+        }
+
+        let now_idx = week_index(now);
+        let start_idx = week_index(start);
+        let end_idx = week_index(end);
+
+        (start_idx - now_idx, end_idx - now_idx)
     }
 }
 
