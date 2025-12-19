@@ -1,16 +1,15 @@
-pub mod agenda;
-
 use color_eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
+use chrono::{Local};
 use ratatui::{
     layout::{Constraint, Layout, Rect},
     style::Stylize,
     text::Line,
-    widgets::{Block, Paragraph},
+    widgets::{Block, Paragraph, Clear},
     DefaultTerminal, Frame,
 };
 
-use crate::app::agenda::Agenda;
+use crate::core::Agenda;
 
 #[derive(Debug, Default)]
 pub struct App {
@@ -40,6 +39,12 @@ impl App {
     /// - <https://docs.rs/ratatui/latest/ratatui/widgets/index.html>
     /// - <https://github.com/ratatui/ratatui/tree/master/examples>
     fn draw(&mut self, frame: &mut Frame) {
+        let area = frame.area();
+        frame.render_widget(Clear, area);
+        Agenda::render_week(
+            area,
+            frame.buffer_mut(),
+        );
     }
 
     /// Reads the crossterm events and updates the state of [`App`].

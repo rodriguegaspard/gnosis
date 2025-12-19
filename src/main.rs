@@ -1,7 +1,10 @@
-pub use app::App;
+mod core;
+mod learning;
+mod misc;
+mod app;
+mod utils;
 
-pub mod app;
-pub mod utils;
+use crate::app::App;
 
 fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;

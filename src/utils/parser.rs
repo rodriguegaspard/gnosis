@@ -1,10 +1,10 @@
-// Utilities to parse text files and returns them in useful objects.
 use chrono::{DateTime, Datelike, Local, TimeZone};
 use std::io::{self, BufRead, Error, ErrorKind};
-use crate::app::agenda::{Activity, Priority};
 use crate::utils::init;
 use regex::{Regex};
 use chrono::{Duration};
+
+use crate::core::agenda::{Activity, Priority};
 
 pub trait Parser<T> {
     fn parse(filepath: &str) -> Result<Vec<T>, io::Error>;
