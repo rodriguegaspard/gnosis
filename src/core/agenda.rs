@@ -1,17 +1,18 @@
 // Make a custom widget, list calendar, per week/month/ add event, specify date, duration, allow
 // for multi-date events.
 // Inspiration from lazyorg (https://github.com/HubertBel/lazyorg)
-use std::{collections::BTreeMap};
+use crate::utils::parser::{AgendaParser, Parser};
 use chrono::{DateTime, Datelike, Duration, Local, NaiveDate, TimeZone, Timelike};
-use color_eyre::{Result};
-use std::str::FromStr;
-use std::fmt;
+use color_eyre::Result;
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Direction, Layout, Rect},
+    style::Style,
     widgets::{Block, Borders, Widget},
 };
-use crate::utils::parser::{Parser, AgendaParser};
+use std::collections::BTreeMap;
+use std::fmt;
+use std::str::FromStr;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Priority {
@@ -43,7 +44,7 @@ impl fmt::Display for Priority {
 }
 
 #[derive(Debug, Clone)]
-pub struct Activity{
+pub struct Activity {
     //_id: &str,
     _title: String,
     _start: DateTime<Local>,
@@ -53,9 +54,16 @@ pub struct Activity{
     _weeks: (i64, i64),
 }
 
-impl Activity{
-    pub fn new(title: String, start: DateTime<Local>, end:DateTime<Local>, description: String, priority: Priority, weeks: (i64, i64)) -> Self {
-        Activity{
+impl Activity {
+    pub fn new(
+        title: String,
+        start: DateTime<Local>,
+        end: DateTime<Local>,
+        description: String,
+        priority: Priority,
+        weeks: (i64, i64),
+    ) -> Self {
+        Activity {
             _title: title,
             _start: start,
             _end: end,
@@ -65,15 +73,15 @@ impl Activity{
         }
     }
 
-    pub fn title(&self) -> &String{
+    pub fn title(&self) -> &String {
         &self._title
     }
 
-    pub fn start(&self) -> &DateTime<Local>{
+    pub fn start(&self) -> &DateTime<Local> {
         &self._start
     }
 
-    pub fn end(&self) -> &DateTime<Local>{
+    pub fn end(&self) -> &DateTime<Local> {
         &self._end
     }
 
@@ -81,23 +89,23 @@ impl Activity{
         &self._description
     }
 
-    pub fn priority(&self) -> &Priority{
+    pub fn priority(&self) -> &Priority {
         &self._priority
     }
 }
 
 #[derive(Debug)]
-pub struct Agenda{
+pub struct Agenda {
     _activities: Vec<Activity>,
 }
 
-impl Agenda{
+impl Agenda {
     pub fn activities(&self) -> &Vec<Activity> {
         &self._activities
     }
 
     pub fn from_file(filepath: &str) -> Self {
-        Agenda{
+        Agenda {
             _activities: AgendaParser::parse(filepath).expect("Failed to load the agenda"),
         }
     }
@@ -130,46 +138,42 @@ impl Agenda{
         week_map
     }
 
-    pub fn render_week(area: Rect, buf: &mut Buffer) {
-    let columns = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([Constraint::Ratio(1, 7); 7])
-        .split(area);
+    pub fn render_week(&self, area: Rect, buf: &mut Buffer) {
+        let columns = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([Constraint::Ratio(1, 7); 7])
+            .split(area);
 
-    const DAY_NAMES: [&str; 7] = [
-        "MONDAY",
-        "TUESDAY",
-        "WEDNESDAY",
-        "THURSDAY",
-        "FRIDAY",
-        "SATURDAY",
-        "SUNDAY",
-    ];
+        let target_week: chrono::DateTime<Local> =
+            Local.with_ymd_and_hms(2025, 1, 13, 0, 0, 0).unwrap();
+        let week_activities: BTreeMap<NaiveDate, Vec<&Activity>> =
+            self.get_week_activities(target_week);
 
-    for (col_area, day) in columns.iter().zip(DAY_NAMES.iter()) {
-        let block = Block::default()
-            .borders(Borders::ALL)
-            .title(*day);
-
-        block.render(*col_area, buf);
+        for (col_area, (date, activities)) in columns.iter().zip(week_activities.iter()) {
+            let block = Block::default()
+                .borders(Borders::ALL)
+                .title(format!("{} ~ {} activities", date.format("%A"), activities.len()));
+            block.render(*col_area, buf);
+        }
     }
-}
-
 }
 
 impl Default for Agenda {
     fn default() -> Self {
-        Agenda{
-            _activities: AgendaParser::parse("/home/rosco/.local/share/gnosis/agenda/agenda.txt").expect("Failed to load the agenda"),
-        }
+        Self::from_file(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/tests/agenda_test.txt"
+        ))
     }
 }
 
 #[test]
 fn get_correct_week() {
     let agenda = Agenda::from_file("tests/agenda_test.txt");
-    let target_week : chrono::DateTime<Local> = Local.with_ymd_and_hms(2025, 1, 15, 0, 0, 0).unwrap(); // Random day of the week
-    let week_activities : BTreeMap<NaiveDate, Vec<&Activity>> = agenda.get_week_activities(target_week);
+    let target_week: chrono::DateTime<Local> =
+        Local.with_ymd_and_hms(2025, 1, 15, 0, 0, 0).unwrap();
+    let week_activities: BTreeMap<NaiveDate, Vec<&Activity>> =
+        agenda.get_week_activities(target_week);
 
     let monday = NaiveDate::from_ymd_opt(2025, 1, 13).unwrap();
     let sunday = NaiveDate::from_ymd_opt(2025, 1, 19).unwrap();
@@ -184,30 +188,36 @@ fn get_correct_week() {
 #[test]
 fn check_event_in_week() {
     let agenda = Agenda::from_file("tests/agenda_test.txt");
-    let target_week : chrono::DateTime<Local> = Local.with_ymd_and_hms(2025, 1, 13, 0, 0, 0).unwrap();
-    let week_activities : BTreeMap<NaiveDate, Vec<&Activity>> = agenda.get_week_activities(target_week);
+    let target_week: chrono::DateTime<Local> =
+        Local.with_ymd_and_hms(2025, 1, 13, 0, 0, 0).unwrap();
+    let week_activities: BTreeMap<NaiveDate, Vec<&Activity>> =
+        agenda.get_week_activities(target_week);
 
     // We should have 3 activities on tuesday : Meet, Call and Span1, in that order in the .csv
     let tuesday = NaiveDate::from_ymd_opt(2025, 1, 14).unwrap();
     let tuesday_activities = week_activities.get(&tuesday).unwrap();
     assert_eq!(tuesday_activities.len(), 3);
-    assert_eq!(tuesday_activities[0].title(), "Meet"); 
-    assert_eq!(tuesday_activities[1].title(), "Call"); 
-    assert_eq!(tuesday_activities[2].title(), "Span1"); 
+    assert_eq!(tuesday_activities[0].title(), "Meet");
+    assert_eq!(tuesday_activities[1].title(), "Call");
+    assert_eq!(tuesday_activities[2].title(), "Span1");
 }
 
 #[test]
 fn check_spanning_event() {
     let agenda = Agenda::from_file("tests/agenda_test.txt");
-    let target_week : chrono::DateTime<Local> = Local.with_ymd_and_hms(2025, 1, 13, 0, 0, 0).unwrap();
-    let week_activities : BTreeMap<NaiveDate, Vec<&Activity>> = agenda.get_week_activities(target_week);
+    let target_week: chrono::DateTime<Local> =
+        Local.with_ymd_and_hms(2025, 1, 13, 0, 0, 0).unwrap();
+    let week_activities: BTreeMap<NaiveDate, Vec<&Activity>> =
+        agenda.get_week_activities(target_week);
 
     // Span1 should have 7 entries, one for each day of the week
     for (date, activities) in &week_activities {
-        let contains_span1 = activities
-            .iter()
-            .any(|a| a.title() == "Span1");
+        let contains_span1 = activities.iter().any(|a| a.title() == "Span1");
 
-        assert!(contains_span1, "Date {} does not contain an activity named Span1.", date);
+        assert!(
+            contains_span1,
+            "Date {} does not contain an activity named Span1.",
+            date
+        );
     }
 }
