@@ -1,11 +1,11 @@
+use chrono::Local;
 use color_eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
-use chrono::{Local};
 use ratatui::{
     layout::{Constraint, Layout, Rect},
     style::Stylize,
     text::Line,
-    widgets::{Block, Paragraph, Clear},
+    widgets::{Block, Clear, Paragraph},
     DefaultTerminal, Frame,
 };
 
@@ -41,10 +41,7 @@ impl App {
     fn draw(&mut self, frame: &mut Frame) {
         let area = frame.area();
         frame.render_widget(Clear, area);
-        Agenda::render_week(
-            area,
-            frame.buffer_mut(),
-        );
+        self._agenda.render_week(area, frame.buffer_mut());
     }
 
     /// Reads the crossterm events and updates the state of [`App`].
@@ -66,8 +63,8 @@ impl App {
     fn on_key_event(&mut self, key: KeyEvent) {
         match (key.modifiers, key.code) {
             (_, KeyCode::Esc | KeyCode::Char('q'))
-                | (KeyModifiers::CONTROL, KeyCode::Char('c') | KeyCode::Char('C')) => self.quit(),
-                // Add other key handlers here.
+            | (KeyModifiers::CONTROL, KeyCode::Char('c') | KeyCode::Char('C')) => self.quit(),
+            // Add other key handlers here.
             _ => {}
         }
     }
