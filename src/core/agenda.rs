@@ -6,7 +6,7 @@ use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Direction, Layout, Rect},
     style::Style,
-    widgets::{Block, Borders, Widget},
+    widgets::{Block, Borders, Paragraph, Widget},
 };
 use std::collections::BTreeMap;
 use std::fmt;
@@ -148,12 +148,14 @@ impl Agenda {
             self.get_week_activities(target_week);
 
         for (col_area, (date, activities)) in columns.iter().zip(week_activities.iter()) {
-            let block = Block::default().borders(Borders::ALL).title(format!(
-                "{} ~ {} activities",
-                date.format("%A"),
-                activities.len()
-            ));
-            block.render(*col_area, buf);
+            let content = Paragraph::new(format!("Number of activities: {}", activities.len()))
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .title(format!("{}", date.format("%A"))),
+                )
+                .centered();
+            content.render(*col_area, buf);
         }
     }
 }
