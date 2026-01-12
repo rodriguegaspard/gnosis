@@ -1,5 +1,3 @@
-// Make a custom widget, list calendar, per week/month/ add event, specify date, duration, allow
-// for multi-date events.
 // Inspiration from lazyorg (https://github.com/HubertBel/lazyorg)
 use crate::utils::parser::{AgendaParser, Parser};
 use chrono::{DateTime, Datelike, Duration, Local, NaiveDate, TimeZone, Timelike};
