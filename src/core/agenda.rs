@@ -43,13 +43,13 @@ impl fmt::Display for Priority {
 
 #[derive(Debug, Clone)]
 pub struct Activity {
-    //_id: &str,
-    _title: String,
-    _start: DateTime<Local>,
-    _end: DateTime<Local>,
-    _description: String,
-    _priority: Priority,
-    _weeks: (i64, i64),
+    //id: &str,
+    title: String,
+    start: DateTime<Local>,
+    end: DateTime<Local>,
+    description: String,
+    priority: Priority,
+    weeks: (i64, i64),
 }
 
 impl Activity {
@@ -62,49 +62,49 @@ impl Activity {
         weeks: (i64, i64),
     ) -> Self {
         Activity {
-            _title: title,
-            _start: start,
-            _end: end,
-            _description: description,
-            _priority: priority,
-            _weeks: weeks,
+            title: title,
+            start: start,
+            end: end,
+            description: description,
+            priority: priority,
+            weeks: weeks,
         }
     }
 
     pub fn title(&self) -> &String {
-        &self._title
+        &self.title
     }
 
     pub fn start(&self) -> &DateTime<Local> {
-        &self._start
+        &self.start
     }
 
     pub fn end(&self) -> &DateTime<Local> {
-        &self._end
+        &self.end
     }
 
     pub fn description(&self) -> &String {
-        &self._description
+        &self.description
     }
 
     pub fn priority(&self) -> &Priority {
-        &self._priority
+        &self.priority
     }
 }
 
 #[derive(Debug)]
 pub struct Agenda {
-    _activities: Vec<Activity>,
+    activities: Vec<Activity>,
 }
 
 impl Agenda {
     pub fn activities(&self) -> &Vec<Activity> {
-        &self._activities
+        &self.activities
     }
 
     pub fn from_file(filepath: &str) -> Self {
         Agenda {
-            _activities: AgendaParser::parse(filepath).expect("Failed to load the agenda"),
+            activities: AgendaParser::parse(filepath).expect("Failed to load the agenda"),
         }
     }
 
@@ -117,7 +117,7 @@ impl Agenda {
             .map(|i| (week_start + Duration::days(i), Vec::new()))
             .collect();
 
-        for activity in &self._activities {
+        for activity in &self.activities {
             let activity_start = activity.start().date_naive();
             let activity_end = activity.end().date_naive();
 
