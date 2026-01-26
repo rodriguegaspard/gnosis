@@ -1,5 +1,8 @@
 use super::traits::Database;
-use rusqlite::{Connection, Error};
+use chrono::{DateTime, Local, TimeZone};
+use rusqlite::{params, Connection, Error};
+use rusqlite::types::{ToSql, FromSql};
+use crate::core::agenda::{Priority, Activity};
 
 pub struct ActivityDatabase {
     path: String,
@@ -11,6 +14,15 @@ impl ActivityDatabase {
             path: database_path.to_string(),
         }
     }
+
+    pub fn insert(&self, activity: &Activity) -> Result<(), Error>{
+        let conn = self.connect()?;
+        conn.execute(
+            "INSERT INTO activities (title, start, end, description, priority) VALUES (?1, ?2, ?3, ?4, ?5)",
+            (activity.title(), activity.start().timestamp(), activity.end().timestamp(), activity.description(), activity.priority().to_string()),
+        )?;
+        Ok(())
+    }
 }
 
 impl Database for ActivityDatabase {
@@ -20,8 +32,8 @@ impl Database for ActivityDatabase {
             "CREATE TABLE IF NOT EXISTS activities (
                 id TEXT PRIMARY KEY,
                 title TEXT NOT NULL,
-                start_unix INTEGER NOT NULL,
-                end_unix INTEGER NOT NULL,
+                start INTEGER NOT NULL,
+                end INTEGER NOT NULL,
                 description TEXT,
                 priority TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -60,8 +72,17 @@ mod tests {
         let conn = db.connect();
         assert!(conn.as_ref().expect("Could not access the database").table_exists(None, "activities").unwrap());
         assert!(conn.as_ref().expect("Could not access the database").column_exists(None, "activities", "title").unwrap());
-        assert!(conn.as_ref().expect("Could not access the database").column_exists(None, "activities", "start_unix").unwrap());
-        assert!(conn.as_ref().expect("Could not access the database").column_exists(None, "activities", "end_unix").unwrap());
+        assert!(conn.as_ref().expect("Could not access the database").column_exists(None, "activities", "start").unwrap());
+        assert!(conn.as_ref().expect("Could not access the database").column_exists(None, "activities", "end").unwrap());
         assert!(conn.as_ref().expect("Could not access the database").column_exists(None, "activities", "priority").unwrap());
+    }
+
+    #[test]
+    fn activity_database_insert(){
+        let db = ActivityDatabase::new("./tests/data.sqlite");
+        db.init();
+        let conn = db.connect();
+        let event = Activity::new("dummy event".to_string(), Local::now(), Local::now(), "optional desc".to_string(), Priority::Low, (0, 0));
+        db.insert(&event);
     }
 }
