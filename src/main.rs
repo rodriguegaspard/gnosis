@@ -3,6 +3,7 @@ mod core;
 mod learning;
 mod misc;
 mod utils;
+mod data;
 
 use crate::app::App;
 
