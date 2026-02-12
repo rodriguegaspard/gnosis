@@ -1,7 +1,7 @@
 use super::traits::Database;
+use crate::core::agenda::{Activity, Priority};
 use chrono::{DateTime, Local, TimeZone};
 use rusqlite::{Connection, Error};
-use crate::core::agenda::{Priority, Activity};
 use std::path::Path;
 
 pub struct ActivityDatabase {
@@ -11,10 +11,11 @@ pub struct ActivityDatabase {
 impl ActivityDatabase {
     pub fn new(database_path: &str) -> Self {
         ActivityDatabase {
-            conn: ActivityDatabase::connect(database_path).expect("Failure to open the activity database.")
+            conn: ActivityDatabase::connect(database_path)
+                .expect("Failure to open the activity database."),
         }
     }
-    pub fn insert(&self, activity: &Activity) -> Result<(), Error>{
+    pub fn insert(&self, activity: &Activity) -> Result<(), Error> {
         self.conn.execute(
             "INSERT INTO activities (title, start, end, description, priority) VALUES (?1, ?2, ?3, ?4, ?5)",
             (activity.title(), activity.start().timestamp(), activity.end().timestamp(), activity.description(), activity.priority().to_string()),
@@ -27,7 +28,7 @@ impl ActivityDatabase {
 }
 
 impl Database for ActivityDatabase {
-    fn init(&self) -> Result<(), Error>{
+    fn init(&self) -> Result<(), Error> {
         self.conn.execute(
             "CREATE TABLE IF NOT EXISTS activities (
                 id TEXT PRIMARY KEY,
@@ -51,8 +52,7 @@ impl Database for ActivityDatabase {
         Ok(())
     }
 
-
-    fn connect(database_path: &str) -> Result<Connection, Error>{
+    fn connect(database_path: &str) -> Result<Connection, Error> {
         let conn = Connection::open(database_path)?;
         conn.execute("PRAGMA foreign_keys = ON", [])?;
         Ok(conn)
@@ -65,23 +65,39 @@ mod tests {
     use tempfile::NamedTempFile;
 
     #[test]
-    fn activity_database_init(){
+    fn activity_database_init() {
         let temp_file = NamedTempFile::new().expect("Failed to create temp file");
         let db = ActivityDatabase::new(temp_file.path().to_str().unwrap());
         db.init().unwrap();
         assert!(db.conn().table_exists(None, "activities").unwrap());
-        assert!(db.conn().column_exists(None, "activities", "title").unwrap());
-        assert!(db.conn().column_exists(None, "activities", "start").unwrap());
+        assert!(db
+            .conn()
+            .column_exists(None, "activities", "title")
+            .unwrap());
+        assert!(db
+            .conn()
+            .column_exists(None, "activities", "start")
+            .unwrap());
         assert!(db.conn().column_exists(None, "activities", "end").unwrap());
-        assert!(db.conn().column_exists(None, "activities", "priority").unwrap());
+        assert!(db
+            .conn()
+            .column_exists(None, "activities", "priority")
+            .unwrap());
     }
 
     #[test]
-    fn activity_database_insert(){
+    fn activity_database_insert() {
         let temp_file = NamedTempFile::new().expect("Failed to create temp file");
         let db = ActivityDatabase::new(temp_file.path().to_str().unwrap());
         db.init().unwrap();
-        let event = Activity::new("dummy event".to_string(), Local::now(), Local::now(), "optional desc".to_string(), Priority::Low, (0, 0));
+        let event = Activity::new(
+            "dummy event".to_string(),
+            Local::now(),
+            Local::now(),
+            "optional desc".to_string(),
+            Priority::Low,
+            (0, 0),
+        );
         db.insert(&event).unwrap();
     }
 }
