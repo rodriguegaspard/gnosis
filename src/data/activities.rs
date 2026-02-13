@@ -3,6 +3,8 @@ use crate::core::agenda::{Activity, Priority};
 use chrono::{DateTime, Local, TimeZone};
 use rusqlite::{Connection, Error};
 use std::path::Path;
+use uuid::Uuid;
+
 
 pub struct ActivityDatabase {
     conn: Connection,
@@ -15,15 +17,16 @@ impl ActivityDatabase {
                 .expect("Failure to open the activity database."),
         }
     }
-    pub fn insert(&self, activity: &Activity) -> Result<(), Error> {
+        pub fn conn(&self) -> &Connection {
+        &self.conn
+    }
+    pub fn create(&self, activity: &Activity) -> Result<(), Error> {
+        let id = Uuid::new_v4();
         self.conn.execute(
-            "INSERT INTO activities (title, start, end, description, priority) VALUES (?1, ?2, ?3, ?4, ?5)",
-            (activity.title(), activity.start().timestamp(), activity.end().timestamp(), activity.description(), activity.priority().to_string()),
+            "INSERT INTO activities (id, title, start, end, description, priority) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            (id.to_string(), activity.title(), activity.start().timestamp(), activity.end().timestamp(), activity.description(), activity.priority().to_string()),
         )?;
         Ok(())
-    }
-    pub fn conn(&self) -> &Connection {
-        &self.conn
     }
 }
 
@@ -86,7 +89,7 @@ mod tests {
     }
 
     #[test]
-    fn activity_database_insert() {
+    fn activity_database_create() {
         let temp_file = NamedTempFile::new().expect("Failed to create temp file");
         let db = ActivityDatabase::new(temp_file.path().to_str().unwrap());
         db.init().unwrap();
@@ -98,6 +101,6 @@ mod tests {
             Priority::Low,
             (0, 0),
         );
-        db.insert(&event).unwrap();
+        db.create(&event).unwrap();
     }
 }
