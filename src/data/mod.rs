@@ -1,2 +1,2 @@
 pub mod activities;
-pub mod traits;
+pub mod database;

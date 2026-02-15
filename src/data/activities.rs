@@ -1,4 +1,4 @@
-use super::traits::Database;
+use super::database::Database;
 use crate::core::agenda::{Activity, Priority};
 use chrono::{DateTime, Local, TimeZone};
 use rusqlite::{Connection, Error};
